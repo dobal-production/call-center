@@ -2,6 +2,12 @@
 
 Amazon Bedrock을 활용한 지능형 고객센터 지원 시스템입니다. 실제 상담 녹취록을 분석하고 AI 모델을 통해 다양한 상담 업무를 자동화할 수 있습니다.
 
+## AI Call Center 가상 아키텍처
+![Call Center Architecture](images/call-center-01.png)
+
+## 스크린샷
+![Call Center ScreenShot](images/call-center-02.png)
+
 ## ✨ 주요 기능
 
 - **다중 AI 모델 지원**: Claude Sonnet 4, Claude 3.7 Sonnet, Nova Pro/Lite 등

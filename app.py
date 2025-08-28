@@ -74,9 +74,6 @@ def main():
         # Get the actual model ID
         model_id = model_options[selected_model_name]
         
-        # Display the model ID for reference
-        st.caption(f"Model ID: `{model_id}`")
-        
         st.divider()
         
         # Inference parameters
@@ -112,12 +109,12 @@ def main():
         st.divider()
         
         # System message customization
-        st.subheader("📝 System Message")
+        st.subheader("📝 System Prompt")
         custom_system_message = st.text_area(
-            "Custom System Message (optional)",
+            "Custom System Prompt (optional)",
             placeholder="Enter custom instructions for the AI assistant...",
             height=100,
-            help="Override the default system message with custom instructions"
+            help="Override the default system prompt with custom instructions"
         )
     
     with st.expander("아키텍처 보기"):

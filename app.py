@@ -58,11 +58,11 @@ def main():
         
         # Model selection with display names and IDs
         model_options = {
-            "Claude Sonnet 4": "apac.anthropic.claude-sonnet-4-20250514-v1:0",
-            "Claude 3.7 Sonnet": "apac.anthropic.claude-3-7-sonnet-20250219-v1:0",
-            "Claude 3.5 Sonnet v2": "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+            "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6",
+            "Claude Haiku 4.5": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "Claude Opus 4.6": "global.anthropic.claude-opus-4-6-v1",
             "Nova Pro": "apac.amazon.nova-pro-v1:0",
-            "Nova Lite": "apac.amazon.nova-lite-v1:0"
+            "Nova 2 Lite": "global.amazon.nova-2-lite-v1:0"
         }
         
         selected_model_name = st.selectbox(
@@ -95,15 +95,6 @@ def main():
             value=0.0,
             step=0.1,
             help="Controls randomness: lower = more focused, higher = more creative"
-        )
-        
-        top_p = st.slider(
-            "Top P",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.9,
-            step=0.1,
-            help="Controls diversity: lower = more focused, higher = more diverse"
         )
         
         st.divider()
@@ -159,8 +150,7 @@ def main():
                     # Prepare inference config
                     inference_config = {
                         "maxTokens": max_tokens,
-                        "temperature": temperature,
-                        "topP": top_p
+                        "temperature": temperature
                     }
                     
                     # Prepare context-aware prompt with transcript

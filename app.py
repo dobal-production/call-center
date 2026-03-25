@@ -129,16 +129,14 @@ def main():
     
     with col1:
         st.subheader("프롬프트")
-        # 녹취 내용이 복사되었는지 확인하고 기본값으로 설정
-        default_text = ""
-        if hasattr(st.session_state, 'transcript_copied'):
-            default_text = st.session_state.transcript_copied
-            # 한 번 사용 후 삭제
-            del st.session_state.transcript_copied
-            
+        # "적용" 버튼으로 전달된 내용이 있으면 session_state에 반영 후 삭제
+        if "transcript_copied" in st.session_state:
+            st.session_state.user_input_area = st.session_state.pop("transcript_copied")
+
+        # key를 사용하면 재렌더링 시에도 session_state가 값을 유지함
         user_input = st.text_area(
             "AI에게 지시를 내려주세요.:",
-            value=default_text,
+            key="user_input_area",
             height=250,
             placeholder="고객의 문의 내용을 입력하세요..."
         )

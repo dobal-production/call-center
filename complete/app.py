@@ -57,6 +57,11 @@ def main():
         st.header("⚙️ 모델 설정")
         
         # 아래의 모델을 model_options에 추가하세요.
+        # "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6",
+        # "Claude Haiku 4.5": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+        # "Claude Opus 4.6": "global.anthropic.claude-opus-4-6-v1",
+        # "Nova Pro": "apac.amazon.nova-pro-v1:0",
+        # "Nova 2 Lite": "global.amazon.nova-2-lite-v1:0"
         model_options = {
             "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6"
         }
@@ -158,16 +163,25 @@ def main():
 
 {user_input}"""
                     
-                    # 동기식 응답 생성
-                    with st.spinner("응답 생성 중..."):
-                        response = bedrock_client.generate_response(
-                            prompt=context_prompt,
-                            model_id=model_id,
-                            inference_config=inference_config,
-                            custom_system_message=custom_system_message if custom_system_message else None
-                        )
-
-                    st.markdown(response)
+                    # 항상 스트리밍 응답 사용
+                    response_placeholder = st.empty()
+                    full_response = ""
+                    
+                    # Bedrock 스트리밍 API를 호출하여 응답을 청크(chunk) 단위로 수신
+                    # - prompt: 통화 내용(transcript)이 포함된 컨텍스트 프롬프트
+                    # - model_id: 사용할 Claude 모델 ID
+                    # - inference_config: temperature 등 추론 파라미터
+                    # - custom_system_message: 사용자 정의 시스템 프롬프트 (없으면 None)
+                    for chunk in bedrock_client.generate_response_stream(
+                        prompt=context_prompt,
+                        model_id=model_id,
+                        inference_config=inference_config,
+                        custom_system_message=custom_system_message if custom_system_message else None
+                    ):
+                        full_response += chunk  # 수신된 청크를 누적하여 전체 응답 조합
+                        response_placeholder.markdown(full_response + " ▋")  # 타이핑 커서(▋)와 함께 실시간으로 UI 업데이트
+                    
+                    response_placeholder.markdown(full_response)
                     st.success("응답 생성이 완료되었습니다!")
                             
                 except Exception as e:

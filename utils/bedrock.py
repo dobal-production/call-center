@@ -23,6 +23,9 @@ class BedrockClient:
             """
 
     # 기본 추론 설정
+    # - maxTokens: 모델이 생성할 최대 토큰 수 (응답 길이 제한)
+    # - temperature: 응답의 무작위성 조절 (0.0 = 결정적, 1.0 = 창의적). 0.7은 균형 잡힌 응답 생성
+    # - topP: 누적 확률 기반 토큰 샘플링 범위 (0.9 = 상위 90% 확률 토큰만 사용)
     DEFAULT_INFERENCE_CONFIG = {
         "maxTokens": 1000,
         "temperature": 0.7,

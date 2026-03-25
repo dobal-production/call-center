@@ -24,16 +24,14 @@ git clone <repository-url>
 cd call-center
 ```
 
-### 2. 가상환경 설정
+### 2. uv 설치 (미설치 시)
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# Windows의 경우: venv\Scripts\activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### 3. 의존성 설치
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### 4. 환경 변수 설정
@@ -44,14 +42,15 @@ cp .env.example .env
 
 ### 5. 애플리케이션 실행
 ```bash
-streamlit run app.py
+uv run streamlit run app.py --server.port 8501
 ```
 
 ## 📁 프로젝트 구조
 ```
 call-center/
 ├── README.md
-├── requirements.txt
+├── pyproject.toml            # 프로젝트 메타데이터 및 의존성
+├── uv.lock                   # 의존성 lock 파일
 ├── .env.example
 ├── .env
 ├── .gitignore
@@ -62,10 +61,9 @@ call-center/
 ├── media/
 │   ├── *.mp3                # 상담 음성 파일
 │   └── *.txt                # 상담 녹취록
-├── utils/
-│   ├── __init__.py
-│   └── bedrock.py           # Amazon Bedrock 클라이언트
-└── venv/                    # 가상환경
+└── utils/
+    ├── __init__.py
+    └── bedrock.py           # Amazon Bedrock 클라이언트
 ```
 
 ## 🔧 사용 방법
@@ -104,7 +102,8 @@ AWS_DEFAULT_REGION=ap-northeast-2
 
 ## 📋 요구사항
 
-- Python 3.8+
+- Python 3.9+
+- [uv](https://docs.astral.sh/uv/) 패키지 매니저
 - AWS 계정 및 Bedrock 액세스 권한
 - 지원되는 AI 모델에 대한 액세스 권한
 

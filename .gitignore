@@ -86,6 +86,9 @@ logs/
 # pyenv
 .python-version
 
+# uv
+.uv/
+
 # Temporary folders
 tmp/
 temp/

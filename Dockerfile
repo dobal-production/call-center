@@ -6,9 +6,11 @@ RUN rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get upgrade -y
 
-COPY requirements.txt .
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock ./
+
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY images/ images/
 COPY utils/ utils/
@@ -20,7 +22,7 @@ EXPOSE 80
 
 HEALTHCHECK CMD curl --fail http://localhost/_stcore/health || exit 1
 
-ENTRYPOINT [ "streamlit", "run", "app.py", \
+ENTRYPOINT [ "uv", "run", "streamlit", "run", "app.py", \
              "--logger.level", "info", \
              "--browser.gatherUsageStats", "false", \
              "--browser.serverAddress", "0.0.0.0", \

@@ -5,13 +5,13 @@ from utils.bedrock import BedrockClient
 
 def load_transcript_file(file_path: str) -> str:
     """
-    Load transcript text from file
-    
+    파일에서 녹취 텍스트를 로드합니다.
+
     Args:
-        file_path: Path to the transcript file
-        
+        file_path: 녹취 파일 경로
+
     Returns:
-        Transcript text content
+        녹취 텍스트 내용
     """
     try:
         if os.path.exists(file_path):
@@ -24,13 +24,13 @@ def load_transcript_file(file_path: str) -> str:
 
 def load_prompt_examples(file_path: str = "prompt_examples.yaml") -> dict:
     """
-    Load prompt examples from YAML file
-    
+    YAML 파일에서 프롬프트 예제를 로드합니다.
+
     Args:
-        file_path: Path to the YAML file containing prompt examples
-        
+        file_path: 프롬프트 예제가 담긴 YAML 파일 경로
+
     Returns:
-        Dictionary containing prompt examples
+        프롬프트 예제가 담긴 딕셔너리
     """
     try:
         if os.path.exists(file_path):
@@ -50,62 +50,63 @@ def main():
     )
     
     st.title("📞 자동차 보험 상담")
-    st.markdown("AI-powered call center support system using Amazon Bedrock")
+    st.markdown("Amazon Bedrock을 활용한 AI 기반 고객센터 지원 시스템")
 
-    # Sidebar for configuration
+    # 사이드바 설정
     with st.sidebar:
-        st.header("⚙️ Model Configuration")
+        st.header("⚙️ 모델 설정")
         
-        # Model selection with display names and IDs
+        # 아래의 모델을 model_options에 추가하세요.
+        # "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6",
+        # "Claude Haiku 4.5": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+        # "Claude Opus 4.6": "global.anthropic.claude-opus-4-6-v1",
+        # "Nova Pro": "apac.amazon.nova-pro-v1:0",
+        # "Nova 2 Lite": "global.amazon.nova-2-lite-v1:0"
         model_options = {
-            "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6",
-            "Claude Haiku 4.5": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
-            "Claude Opus 4.6": "global.anthropic.claude-opus-4-6-v1",
-            "Nova Pro": "apac.amazon.nova-pro-v1:0",
-            "Nova 2 Lite": "global.amazon.nova-2-lite-v1:0"
+            "Claude Sonnet 4.6": "global.anthropic.claude-sonnet-4-6"
         }
         
         selected_model_name = st.selectbox(
-            "Select Model",
+            "모델 선택",
             options=list(model_options.keys()),
-            help="Choose the AI model for generating responses"
+            help="응답 생성을 위한 AI 모델을 선택하세요"
         )
         
-        # Get the actual model ID
+        # 실제 모델 ID 가져오기
         model_id = model_options[selected_model_name]
         
         st.divider()
         
-        # Inference parameters
-        st.subheader("🎛️ Inference Parameters")
+        # 추론 파라미터
+        st.subheader("🎛️ 추론 파라미터")
         
         max_tokens = st.slider(
-            "Max Tokens",
+            "최대 토큰",
             min_value=100,
             max_value=4000,
             value=2000,
             step=100,
-            help="Maximum number of tokens in the response"
+            help="응답의 최대 토큰 수"
         )
         
         temperature = st.slider(
-            "Temperature",
+            "온도 (Temperature)",
             min_value=0.0,
             max_value=1.0,
             value=0.0,
             step=0.1,
-            help="Controls randomness: lower = more focused, higher = more creative"
+            help="무작위성 제어: 낮을수록 집중적, 높을수록 창의적"
         )
         
         st.divider()
         
-        # System message customization
-        st.subheader("📝 System Prompt")
+        # 시스템 메시지 커스터마이징
+        st.subheader("📝 시스템 프롬프트")
         custom_system_message = st.text_area(
-            "Custom System Prompt (optional)",
-            placeholder="Enter custom instructions for the AI assistant...",
+            "커스텀 시스템 프롬프트 (선택사항)",
+            placeholder="AI 어시스턴트에 대한 커스텀 지시를 입력하세요...",
             height=100,
-            help="Override the default system prompt with custom instructions"
+            help="기본 시스템 프롬프트를 커스텀 지시로 덮어씁니다"
         )
     
     with st.expander("아키텍처 보기"):
@@ -123,23 +124,21 @@ def main():
         # 녹취 내용 표시
         st.write(transcript_text)
 
-    # Main content area
-    col1, col2 = st.columns([1, 1])
+    # 메인 콘텐츠 영역
+    col1, col2 = st.columns([2, 1])
     
     with col1:
         st.subheader("프롬프트")
-        # 녹취 내용이 복사되었는지 확인하고 기본값으로 설정
-        default_text = ""
-        if hasattr(st.session_state, 'transcript_copied'):
-            default_text = st.session_state.transcript_copied
-            # 한 번 사용 후 삭제
-            del st.session_state.transcript_copied
-            
+        # "적용" 버튼으로 전달된 내용이 있으면 session_state에 반영 후 삭제
+        if "transcript_copied" in st.session_state:
+            st.session_state.user_input_area = st.session_state.pop("transcript_copied")
+
+        # key를 사용하면 재렌더링 시에도 session_state가 값을 유지함
         user_input = st.text_area(
             "AI에게 지시를 내려주세요.:",
-            value=default_text,
+            key="user_input_area",
             height=250,
-            placeholder="Type the customer's inquiry here..."
+            placeholder="고객의 문의 내용을 입력하세요..."
         )
         
         if st.button("실행", type="primary"):
@@ -147,13 +146,13 @@ def main():
                 try:
                     bedrock_client = BedrockClient()
                     
-                    # Prepare inference config
+                    # 추론 설정 준비
                     inference_config = {
                         "maxTokens": max_tokens,
                         "temperature": temperature
                     }
                     
-                    # Prepare context-aware prompt with transcript
+                    # 녹취록을 포함한 컨텍스트 기반 프롬프트 준비
                     context_prompt = f"""다음은 고객과 상담원 간의 통화 녹취록입니다:
 
 <context>
@@ -164,18 +163,23 @@ def main():
 
 {user_input}"""
                     
-                    # Always use streaming response
+                    # 항상 스트리밍 응답 사용
                     response_placeholder = st.empty()
                     full_response = ""
                     
+                    # Bedrock 스트리밍 API를 호출하여 응답을 청크(chunk) 단위로 수신
+                    # - prompt: 통화 내용(transcript)이 포함된 컨텍스트 프롬프트
+                    # - model_id: 사용할 Claude 모델 ID
+                    # - inference_config: temperature 등 추론 파라미터
+                    # - custom_system_message: 사용자 정의 시스템 프롬프트 (없으면 None)
                     for chunk in bedrock_client.generate_response_stream(
-                        prompt=context_prompt, 
+                        prompt=context_prompt,
                         model_id=model_id,
                         inference_config=inference_config,
                         custom_system_message=custom_system_message if custom_system_message else None
                     ):
-                        full_response += chunk
-                        response_placeholder.markdown(full_response + " ▋")
+                        full_response += chunk  # 수신된 청크를 누적하여 전체 응답 조합
+                        response_placeholder.markdown(full_response + " ▋")  # 타이핑 커서(▋)와 함께 실시간으로 UI 업데이트
                     
                     response_placeholder.markdown(full_response)
                     st.success("응답 생성이 완료되었습니다!")
@@ -194,12 +198,16 @@ def main():
         prompt_examples = prompt_data.get("prompt_examples", {})
         
         # 각 프롬프트 예제를 expander와 st.code로 표시
+        # "적용" 버튼 클릭 시 session_state에 내용을 저장하고 rerun하여 text_area에 반영
         for key, example in prompt_examples.items():
             title = example.get("title", key)
             content = example.get("content", "")
-            
+
             with st.expander(title):
                 st.code(content, language="text")
+                if st.button("적용", key=f"apply_{key}"):
+                    st.session_state.transcript_copied = content
+                    st.rerun()
         
 
 if __name__ == "__main__":

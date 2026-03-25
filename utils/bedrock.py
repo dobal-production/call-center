@@ -5,21 +5,39 @@ from typing import Optional
 import streamlit as st
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+# .env 파일에서 환경 변수 로드
 load_dotenv()
 
 class BedrockClient:
-    """Amazon Bedrock client for AI model interactions"""
-    
+    """Amazon Bedrock AI 모델 연동 클라이언트"""
+
+    # 콜센터 어시스턴트의 기본 시스템 메시지
+    DEFAULT_SYSTEM_MESSAGE = """당신은 친절한 콜센터 어시스턴트입니다.
+            고객 문의에 전문적이고 공감하는 답변을 제공해 주세요.
+
+            가이드라인:
+            - 정중하고 전문적인 태도를 유지하세요
+            - 명확하고 실행 가능한 해결책을 제시하세요
+            - 고객의 불편에 공감을 표현하세요
+            - 답변은 간결하되 충분한 내용을 담으세요
+            """
+
+    # 기본 추론 설정
+    DEFAULT_INFERENCE_CONFIG = {
+        "maxTokens": 1000,
+        "temperature": 0.7,
+        "topP": 0.9
+    }
+
     def __init__(self, region_name: Optional[str] = None):
         """
-        Initialize Bedrock client
-        
+        Bedrock 클라이언트 초기화
+
         Args:
-            region_name: AWS region name (optional, defaults to environment variable)
+            region_name: AWS 리전 이름 (선택 사항, 기본값은 환경 변수)
         """
         try:
-            # Get region from environment variable or use provided value or default
+            # 환경 변수 또는 제공된 값 또는 기본값에서 리전 가져오기
             self.region_name = region_name or os.getenv('AWS_REGION', 'ap-northeast-2')
             
             self.bedrock_runtime = boto3.client(
@@ -31,40 +49,29 @@ class BedrockClient:
             raise
     
     def generate_response(
-        self, 
-        prompt: str, 
-        model_id: str, 
+        self,
+        prompt: str,
+        model_id: str,
         inference_config: Optional[dict] = None,
         custom_system_message: Optional[str] = None
     ) -> str:
         """
-        Generate response using Amazon Bedrock Converse API (non-streaming)
-        
+        Amazon Bedrock Converse API를 사용하여 응답 생성 (비스트리밍)
+
         Args:
-            prompt: User input prompt
-            model_id: Bedrock model identifier
-            inference_config: Dictionary with inference parameters (maxTokens, temperature, topP)
-            custom_system_message: Optional custom system message
-            
+            prompt: 사용자 입력 프롬프트
+            model_id: Bedrock 모델 식별자
+            inference_config: 추론 파라미터 딕셔너리 (maxTokens, temperature, topP)
+            custom_system_message: 선택적 커스텀 시스템 메시지
+
         Returns:
-            Generated response text
+            생성된 응답 텍스트
         """
         try:
-            # Default system message for call center assistant
-            default_system_message = """You are a helpful call center assistant. 
-            Please provide a professional and empathetic response to customer inquiries.
-            
-            Guidelines:
-            - Be polite and professional
-            - Provide clear and actionable solutions
-            - Show empathy for customer concerns
-            - Keep responses concise but comprehensive
-            """
-            
-            # Use custom system message if provided, otherwise use default
-            system_message = custom_system_message if custom_system_message else default_system_message
-            
-            # Prepare messages for Converse API
+            # 커스텀 시스템 메시지가 제공된 경우 사용, 아니면 기본값 사용
+            system_message = custom_system_message if custom_system_message else self.DEFAULT_SYSTEM_MESSAGE
+
+            # Converse API용 메시지 준비
             messages = [
                 {
                     "role": "user",
@@ -75,26 +82,19 @@ class BedrockClient:
                     ]
                 }
             ]
-            
-            # Default inference configuration
-            default_inference_config = {
-                "maxTokens": 1000,
-                "temperature": 0.7,
-                "topP": 0.9
-            }
-            
-            # Use provided inference config or default
-            final_inference_config = inference_config if inference_config else default_inference_config
-            
-            # Make the Converse API call
+
+            # 제공된 추론 설정 또는 기본값 사용
+            final_inference_config = inference_config if inference_config else self.DEFAULT_INFERENCE_CONFIG
+
+            # Converse API 호출
             response = self.bedrock_runtime.converse(
                 modelId=model_id,
                 messages=messages,
                 system=[{"text": system_message}],
                 inferenceConfig=final_inference_config
             )
-            
-            # Extract the response text
+
+            # 응답 텍스트 추출
             return response['output']['message']['content'][0]['text']
                 
         except Exception as e:
@@ -103,40 +103,29 @@ class BedrockClient:
             return error_msg
     
     def generate_response_stream(
-        self, 
-        prompt: str, 
-        model_id: str, 
+        self,
+        prompt: str,
+        model_id: str,
         inference_config: Optional[dict] = None,
         custom_system_message: Optional[str] = None
     ):
         """
-        Generate streaming response using Amazon Bedrock Converse Stream API
-        
+        Amazon Bedrock Converse Stream API를 사용하여 스트리밍 응답 생성
+
         Args:
-            prompt: User input prompt
-            model_id: Bedrock model identifier
-            inference_config: Dictionary with inference parameters (maxTokens, temperature, topP)
-            custom_system_message: Optional custom system message
-            
+            prompt: 사용자 입력 프롬프트
+            model_id: Bedrock 모델 식별자
+            inference_config: 추론 파라미터 딕셔너리 (maxTokens, temperature, topP)
+            custom_system_message: 선택적 커스텀 시스템 메시지
+
         Yields:
-            Streaming response chunks
+            스트리밍 응답 청크
         """
         try:
-            # Default system message for call center assistant
-            default_system_message = """You are a helpful call center assistant. 
-            Please provide a professional and empathetic response to customer inquiries.
-            
-            Guidelines:
-            - Be polite and professional
-            - Provide clear and actionable solutions
-            - Show empathy for customer concerns
-            - Keep responses concise but comprehensive
-            """
-            
-            # Use custom system message if provided, otherwise use default
-            system_message = custom_system_message if custom_system_message else default_system_message
-            
-            # Prepare messages for Converse API
+            # 커스텀 시스템 메시지가 제공된 경우 사용, 아니면 기본값 사용
+            system_message = custom_system_message if custom_system_message else self.DEFAULT_SYSTEM_MESSAGE
+
+            # Converse API용 메시지 준비
             messages = [
                 {
                     "role": "user",
@@ -147,26 +136,19 @@ class BedrockClient:
                     ]
                 }
             ]
-            
-            # Default inference configuration
-            default_inference_config = {
-                "maxTokens": 1000,
-                "temperature": 0.7,
-                "topP": 0.9
-            }
-            
-            # Use provided inference config or default
-            final_inference_config = inference_config if inference_config else default_inference_config
-            
-            # Make the Converse Stream API call
+
+            # 제공된 추론 설정 또는 기본값 사용
+            final_inference_config = inference_config if inference_config else self.DEFAULT_INFERENCE_CONFIG
+
+            # Converse Stream API 호출
             response = self.bedrock_runtime.converse_stream(
                 modelId=model_id,
                 messages=messages,
                 system=[{"text": system_message}],
                 inferenceConfig=final_inference_config
             )
-            
-            # Process streaming response
+
+            # 스트리밍 응답 처리
             for event in response['stream']:
                 if 'contentBlockDelta' in event:
                     delta = event['contentBlockDelta']['delta']
@@ -182,13 +164,13 @@ class BedrockClient:
     
     def list_available_models(self) -> list:
         """
-        List available Bedrock models
-        
+        사용 가능한 Bedrock 모델 목록 조회
+
         Returns:
-            List of available model IDs
+            사용 가능한 모델 ID 목록
         """
         try:
-            # Use the same region as the runtime client
+            # 런타임 클라이언트와 동일한 리전 사용
             bedrock = boto3.client('bedrock', region_name=self.region_name)
             response = bedrock.list_foundation_models()
             return [model['modelId'] for model in response['modelSummaries']]
